@@ -8,7 +8,7 @@ function syncUSnewsletters()
 
 //---And the Google Sites 'List Page' here-V
 
-  var page = SitesApp.getPageByUrl("https://sites.adopt-a-child.com/us-office/us-newsletters");
+  var page = SitesApp.getPageByUrl("https://sites.google.com/a/domainname/us-office/us-newsletters");
   
   while(!done){
     // The while loop and try - catch statement are used to automatically retry if there's an issue during the execution (common issue: SitesApp: Internal error).
