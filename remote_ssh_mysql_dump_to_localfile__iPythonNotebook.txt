@@ -1,0 +1,94 @@
+{
+ "metadata": {
+  "name": "Remote SSH MYSQL DUMP "
+ },
+ "nbformat": 3,
+ "nbformat_minor": 0,
+ "worksheets": [
+  {
+   "cells": [
+    {
+     "cell_type": "heading",
+     "level": 1,
+     "metadata": {},
+     "source": "SSH tunnel into a remote server and perform a mysqldump"
+    },
+    {
+     "cell_type": "heading",
+     "level": 3,
+     "metadata": {},
+     "source": "if your server does not requre a certificate authentication you can sub in <code>pass=\"password\"</code> <code>for pkey = myhkey</code>  <br>\n<hr>\n\n\n**this is compliant with AWS Cloud Hosting <br>\nonly requirement is the Paramiko library:\n    <br>https://github.com/paramiko/paramiko which you will end up wanting anyway."
+    },
+    {
+     "cell_type": "heading",
+     "level": 5,
+     "metadata": {},
+     "source": "**this is compliant with AWS Cloud Hosting\nonly requirement is the Paramiko library https://github.com/paramiko/paramiko which you will end up wanting anyway."
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "",
+     "language": "python",
+     "metadata": {},
+     "outputs": []
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "import paramiko\nimport os",
+     "language": "python",
+     "metadata": {},
+     "outputs": [],
+     "prompt_number": 1
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "mykey = paramiko.RSAKey.from_private_key_file(\"/path/to/hosting/certificate.pem\")\nserver = 'foo.com'\nsshuser = 'sshusername'\nmysqluser = 'root'\nmysqlpass = 'myMy$wladminpassword'\ndbname = 'dbname'\nsaveto = 'dump.sql'",
+     "language": "python",
+     "metadata": {},
+     "outputs": [],
+     "prompt_number": 2
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "client = paramiko.SSHClient()\nclient.load_system_host_keys()\nclient.connect(server, username = sshuser, pkey = mykey)",
+     "language": "python",
+     "metadata": {},
+     "outputs": [],
+     "prompt_number": 3
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "def ssh(cmd):\n    out = []\n    msg = [stdin, stdout, stderr] = client.exec_command(cmd)\n    for item in msg:\n        try:\n            for line in item:\n                out.append(line.strip('\\n'))\n        except: pass\n    \n    return(list(out))",
+     "language": "python",
+     "metadata": {},
+     "outputs": [],
+     "prompt_number": "*"
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "a = ssh('mysqldump -u %s -p %s %s') % mysqluser, mysqlpass, dbname\n",
+     "language": "python",
+     "metadata": {},
+     "outputs": [],
+     "prompt_number": "*"
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "file = open('dump.sql', 'w')\nfile.write(str(a))\nfile.close()\nprint 'The dump had '+ str(len(a))+ ' lines and was saved to '+ str(os.path.realpath('dump.sql'))",
+     "language": "python",
+     "metadata": {},
+     "outputs": [],
+     "prompt_number": "*"
+    }
+   ],
+   "metadata": {}
+  }
+ ]
+}

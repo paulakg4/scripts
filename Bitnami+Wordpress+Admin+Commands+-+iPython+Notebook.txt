@@ -1,0 +1,114 @@
+{
+ "metadata": {
+  "name": "Bitnami Wordpress Admin Commands"
+ },
+ "nbformat": 3,
+ "nbformat_minor": 0,
+ "worksheets": [
+  {
+   "cells": [
+    {
+     "cell_type": "heading",
+     "level": 1,
+     "metadata": {},
+     "source": "Connect"
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "import paramiko\nimport os\n\nkeyfilepath = \"/users/folder/to/bitnami-hosting.pem\"  ##- can also use pass = :sshpassword'\nserver = 'myserver.foo.com'\nsshuser = 'bitnami'\nmysqluser = 'root'\nmysqlpass = 'rootpwd'\ndbname = 'bitnami_wordpress'\nsaveto = 'dump.sql'\n\n\nmykey = paramiko.RSAKey.from_private_key_file(keyfilepath)\nclient = paramiko.SSHClient()\nclient.load_system_host_keys()\nclient.connect(server, username = sshuser, pkey = mykey)\n\ndef ssh(cmd):\n    out = []\n    msg = [stdin, stdout, stderr] = client.exec_command(cmd)\n    for item in msg:\n        try:\n            for line in item:\n                out.append(line.strip('\\n'))\n        except: pass\n    \n    return(list(out))",
+     "language": "python",
+     "metadata": {},
+     "outputs": []
+    },
+    {
+     "cell_type": "heading",
+     "level": 1,
+     "metadata": {},
+     "source": "Fix Permissions"
+    },
+    {
+     "cell_type": "code",
+     "collapsed": true,
+     "input": "fixpermissions = '''\necho begin > /tmp/countchanges\nsudo chown -c bitnami:daemon /opt/bitnami/apps/wordpress/htdocs/.* >> /tmp/countchanges\nsudo chown -R -c bitnami:daemon /opt/bitnami/apps/wordpress/htdocs/wp-includes  >> /tmp/countchanges\nsudo chown -R -c bitnami:daemon /opt/bitnami/apps/wordpress/htdocs/wp-content >> /tmp/countchanges\n\nsudo chmod -c g+w /opt/bitnami/apps/wordpress/htdocs/.*  >> /tmp/countchanges\nsudo chmod -R -c g+w /opt/bitnami/apps/wordpress/htdocs/wp-content  >> /tmp/countchanges\nsudo chmod -R -c g+w /opt/bitnami/apps/wordpress/htdocs/wp-includes  >> /tmp/countchanges\necho end >> /tmp/countchanges\nwc -l /tmp/countchanges \ncat /tmp/countchanges\n'''\n\nssh(fixpermissions)\n",
+     "language": "python",
+     "metadata": {},
+     "outputs": []
+    },
+    {
+     "cell_type": "code",
+     "collapsed": true,
+     "input": "",
+     "language": "python",
+     "metadata": {},
+     "outputs": []
+    },
+    {
+     "cell_type": "heading",
+     "level": 2,
+     "metadata": {},
+     "source": "MySQL Log Read"
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "ssh('''\nsudo head -n 100 /opt/bitnami/mysql/data/mysqld.log\n''')",
+     "language": "python",
+     "metadata": {},
+     "outputs": []
+    },
+    {
+     "cell_type": "heading",
+     "level": 2,
+     "metadata": {},
+     "source": "HTTPD Logs (last 10 lines) of each"
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "ssh('''\nsudo head -n 10 /opt/bitnami/apache2/logs/error_log > /tmp/httpdlogheads\nsudo head -n 10 /opt/bitnami/apache2/logs/error_log >> /tmp/httpdlogheads\nsudo head -n 10 /opt/bitnami/apache2/logs/error_log >> /tmp/httpdlogheads\nwc -l /tmp/httpdlogheads\ncat /tmp/httpdlogheads\n''')",
+     "language": "python",
+     "metadata": {},
+     "outputs": []
+    },
+    {
+     "cell_type": "heading",
+     "level": 2,
+     "metadata": {},
+     "source": "Make local backup of mysql"
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "a = ssh('mysqldump -u %s -p %s %s') % mysqluser, mysqlpass, dbname\nfile = open('dump.sql', 'w')\nfile.write(str(a))\nfile.close()\nprint 'The dump had '+ str(len(a))+ ' lines and was saved to '+ str(os.path.realpath('dump.sql'))",
+     "language": "python",
+     "metadata": {},
+     "outputs": []
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "",
+     "language": "python",
+     "metadata": {},
+     "outputs": []
+    },
+    {
+     "cell_type": "heading",
+     "level": 3,
+     "metadata": {},
+     "source": "<tex=red>this doesnt work...yet</red>"
+    },
+    {
+     "cell_type": "code",
+     "collapsed": false,
+     "input": "##this doesnt work- if someone can fix it that would be cool\nrestart_bitnami = (\n\"sudo bash /opt/bitnami/ctlscript.sh stop\",\n\"sudo /opt/bitnami/ctlscript.sh restart\",\n\"sudo /opt/bitnami/ctlscript.sh start\"\n)\nfor i in restart_bitnami:\n        print(i)\n\n#ssh(restart_bitnami[1])",
+     "language": "python",
+     "metadata": {},
+     "outputs": []
+    }
+   ],
+   "metadata": {}
+  }
+ ]
+}
